@@ -4,8 +4,8 @@ const INCREASE = "counter/INCREASE";
 const DECREASE = "counter/DECREASE";
 const INCREASE5 = "counter/INCREASE5";
 
-export const increase = () => ({ type: INCREASE });
-export const decrease = () => ({ type: DECREASE });
+export const increase = () => ({ type: DECREASE });
+export const decrease = () => ({ type: INCREASE });
 export const increase5 = () => ({ type: INCREASE5 });
 /* 액션 생성 함수 : export 사용함으로써 
 추후 이 함수를 다른 파일에서 불러와 사용 할 수 있다.*/
