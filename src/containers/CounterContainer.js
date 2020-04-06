@@ -1,25 +1,19 @@
 import React from "react";
 //  connect 를 불러옴
 import { connect } from "react-redux";
+//  Presentation Component
 import Counter from "../components/Counter";
 // 액션 생성 함수 불러옴
 import { increase, decrease } from "../modules/counter";
-// import { bindActionCreators } from "redux";
 
-const CounterContainer = ({ number, increase, decrease, color }) => {
+const CounterContainer = ({ number, increase, decrease }) => {
   return (
-    <Counter
-      number={number}
-      color={color}
-      onIncrease={increase}
-      onDecrease={decrease}
-    />
+    <Counter number={number} onIncrease={increase} onDecrease={decrease} />
   );
 };
 export default connect(
   (state) => ({
     number: state.counter.number,
-    color: state.counter.color,
   }),
   {
     increase,

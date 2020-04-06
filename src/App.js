@@ -7,9 +7,11 @@ function App() {
     <div>
       <CounterContainer />
       <hr />
-      {/* <TodosContainer /> */}
     </div>
   );
 }
 
 export default App;
+{
+  /* <TodosContainer /> */
+}
