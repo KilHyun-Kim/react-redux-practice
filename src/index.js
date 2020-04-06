@@ -4,15 +4,13 @@ import "./index.css";
 import App from "./App";
 import { composeWithDevTools } from "redux-devtools-extension";
 import * as serviceWorker from "./serviceWorker";
-
 // 스토어 만들기
 import { createStore } from "redux";
 // 루트 리듀서 갖고오기
-import rootReducer from "./modules/index";
-// 스토어 생성
+import rootReducer from "./modules/counter";
 //Provider 생성
 import { Provider } from "react-redux";
-
+// 스토어 생성
 const store = createStore(rootReducer, composeWithDevTools());
 
 /*const store = createStore(

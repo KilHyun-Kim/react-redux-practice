@@ -3,27 +3,27 @@ import React from "react";
 import { connect } from "react-redux";
 import Counter from "../components/Counter";
 // 액션 생성 함수 불러옴
-import { increase, decrease, increase5 } from "../modules/counter";
+import { increase, decrease } from "../modules/counter";
 // import { bindActionCreators } from "redux";
 
-const CounterContainer = ({ number, increase, decrease, increase5 }) => {
+const CounterContainer = ({ number, increase, decrease, color }) => {
   return (
     <Counter
       number={number}
+      color={color}
       onIncrease={increase}
       onDecrease={decrease}
-      onIncrease5={increase5}
     />
   );
 };
 export default connect(
   (state) => ({
     number: state.counter.number,
+    color: state.counter.color,
   }),
   {
     increase,
     decrease,
-    increase5,
   }
 )(CounterContainer);
 

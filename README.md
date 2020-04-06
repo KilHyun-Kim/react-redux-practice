@@ -30,8 +30,6 @@
 > 리듀서 함수
 > function counter(state = initialState, action) {
 >   switch (action.type) {
->
->
 >    case INCREASE:
 >      return {
 >        number: state.number + 1,
@@ -40,16 +38,34 @@
 >      return {
 >        number: state.number - 1,
 >      };
->    case INCREASE5:
->      return {
->        number: state.number + 5,
->      };
 >    default:
 >      return state;
 >   }
 > }
+> // combineReducers({counter}) 를 내보내준다
+> export default combineReducers({ counter });
 > ```
 >
 > ### 4. 리액트 애플리케이션에 리덕스 적용하기
 >
 > #### 스토어를 만들고 리액트 애플리케이션에 리덕스를 적용하는 작업은 src/index.js 에서 이루어진다.
+>
+> ```
+>  src/index.js
+>
+> // 스토어 만들기
+> import { createStore } from "redux";
+> // counter.js 리듀서 갖고오기
+> import conterReducer from "./modules/counter";
+> //Provider 생성
+> import { Provider } from "react-redux";
+> // 스토어 생성
+> const store = createStore(conterReducer, composeWithDevTools());
+> // <Provider>로 <App /> 감싸주기
+>  ReactDOM.render(
+>  <Provider store={store}>
+>    <App />
+>  </Provider>,
+>  document.getElementById("root")
+> );
+> ```
