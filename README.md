@@ -73,9 +73,9 @@
 > ### 5. 컨테이너 컴포넌트 만들기
 >
 > #### 컴포넌트에서 리덕스 스토어에 접근하여 원하는 상태를 받아 오고,또 액션도 디스패치해 줄 차례
-
+>
 > ```
->  #/constainers/CounterContainer
+>  #/containers/CounterContainer
 >
 > // connect 를 불러옴
 > import { connect } from "react-redux";

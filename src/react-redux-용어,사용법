@@ -301,5 +301,311 @@ export default connect(
 ******** 4번이 제일 간단함 *******
 
 
-Retry - Todos
 
+리덕스 더 편하게 사용하기
+
+redux-actions / immer
+
+1. redux-actions 
+
+액션 생성 함수를 더 짧은 코드로 작성할 수 있다.
+리듀서 함수를 작성할 때도 switch/case 문이 아닌 
+handleActions 함수를 사용하여 각 액션마다 업데이트 함수를 설정하는 형식으로 작성
+- (리듀서 적용!)
+
+$ yarn add redux-actions
+
+2. counter 모듈에 redux-actions 적용 하기
+
+(1) createAction 사용, 액션 생성함수 만듬
+
+// creasAction 를 사용하여 액션 생성함수 내보내줌
+// 장점: 매번 객체를 직접 만들어 줄 필요 없이 간단하게 액션 생성 함수를 선언할 수 있다.
+
+(2) handleActions 사용, 리듀서 함수 만듬
+
+ - 리듀서 함수를 간단하고 가독성 높게 만들수 있음
+
+ - handleActions 함수의 첫 번째 파라미터에는 각 액션에 대한 업데이트 함수를 넣어주고,
+  두번째 파라미터에는 초기상태를 넣어준다.
+
+###
+  const counter = handleActions(
+    {
+      [INCREASE]: (state, action) => ({ number: state.number + 1 }),
+      [DECREASE]: (state, action) => ({ number: state.number - 1 }),
+    },
+    initialState
+  );
+###
+
+ # todos.js
+ todos는 각 액션 생성 함수에서 파라미터를 필요로 한다. ( Counter 랑 조금 다름 )
+ creasAction 으로 액션을 만들면 액션에 필요한 추가 데이터는 payload라는 이름을 사용함
+
+(EX)
+const MY_ACTION = 'sample/MY_ACTION';
+const myAction = createAction(MY_ACTION);
+const action = myAction('hello world');
+결과:
+ { type: MY_ACTION , payload: 'hello world' }
+
+액션 생성 함수에서 받아 온 파라미터를 그대로 payload에 넣는 것이 아니라
+변형을 주고 싶다면, creasAction의 두 번재 함수에 payload를 정의하는 함수를 
+따로 선언하여 넣어주면 된다.
+
+const MY_ACTION = 'sample/MY_ACTION';
+const myAction = createAction(MY_ACTION, text => `${text} kilhyun`);
+const action = myAction('hello world');
+결과:
+ { type: MY_ACTION , payload: 'hello world kilhyun' }
+
+
+액션생성함수가 마무리 되었으면, handleActions를 사용하여 리듀서를 재작성해보자.
+
+createAction으로 만든 액션 생성 함수는 파라미터로 받아 온 값을 객체 안에 넣을 때
+원하는 이름으로 넣는 것이 아니라 action.id, action.todo와 같이
+action.payload라는 이름을 공통적으로 넣어주게된다.
+
+- 그렇기 때문에, 기존의 업데이트 로직에서도 모두 action.payload 값을 조회하여
+업데이트 하도록 구현해 주어야한다.
+
+액션 생성 함수는 액션에 필요한 추가 데이터를 모두 payload라는 이름으로 사용하기 
+때문에 action.id, action.todo를 조회하는 대신, 
+공통적으로 action.payload값을 조회하도록 리듀서를 구현해줘야한다.
+
+### handleActions를 사용하여 리듀서 구현
+const todos = handleActions(
+  {
+    [CHANGE_INPUT]: (state, action) => ({ ...state, input: action.payload }),
+    [INSERT]: (state, action) => ({
+      ...state,
+      todos: state.todos.concat(action.payload),
+    }),
+    [TOGGLE]: (state, action) => ({
+      ...state,
+      todos: state.todos.map((todo) =>
+        todo.id === action.payload ? { ...todo, done: !todo.done } : todo
+      ),
+    }),
+    [REMOVE]: (state, action) => ({
+      ...state,
+      todos: state.todos.filter((todo) => todo.id !== action.id),
+    }),
+  },
+  initialState
+);
+export default todos;
+###
+
+여기서 모든 추가 데이터 값을 action.payload로 사용하기 때문에 나중에 다시 볼때
+햇갈릴 수 있기 때문에, 객체 비구조화 할당 문법으로 action 값의 payload 이름을
+새로 설정해 주면 action.payload가 정확히 어떤 값을 의미하는지 쉽게 파악가능
+
+
+###
+action.payload 를 비구조화할당문법 사용 {payload: ... } 로 바꾼 모양
+[INSERT]: (state, { payload: todo }) => ({
+    ...state,
+    todos: state.todos.concat(todo),
+  }),
+  [TOGGLE]: (state, { payload: id }) => ({
+    ...state,
+    todos: state.todos.map((todo) =>
+      todo.id === id ? { ...todo, done: !todo.done } : todo
+    ),
+  }),
+###
+
+
+
+3. immer - 불변성 유지
+
+리듀서에서 상태 업데이트 시 , 불변성을 지켜야한다.
+앞에서는 spread (...)와 배열의 내장 함수를 사용하였다.
+그러나 모듈의 상태가 복잡해질수록 불변성을 지키기가 까다로워짐.
+따라서, 모듈r의 상태를 설계할 때는 객체의 깊이가 너무 깊어지지 않도록 주의해야함.
+
+객체의 깊이가 깊지 않을수록 추후 불변성을 지켜 가면서 값을 업데이트할 때 수월함
+하지만 상황에 따라 상태 값들을 하나의 객체 안에 묶어서 넣는 것이 코드의 가독성을
+높이는데 유리하며, 나중에 컴포넌트에 리덕스를 연동할 때도 더욱 편하다.
+
+객체의 구조가 복잡해지거나 객체로 이루어진 배열을 다룰경우, immer를 사용하면
+훨씬 편리하게 상태를 관리할 수 있다.
+
+$ yarn add immer 
+
+간단한 리듀서에 immer를 적용하면 오히려 코드가 더 길어질수 있다는점!
+
+
+### 
+todos.js
+
+const todos = handleActions(
+  {
+    [CHANGE_INPUT]: (state, { payload: input }) =>
+      produce(state, (draft) => {
+        draft.input = input;
+      }),
+    [INSERT]: (state, { payload: todo }) =>
+      produce(state, (draft) => {
+        draft.todos.push(todo);
+      }),
+    [TOGGLE]: (state, { payload: id }) =>
+      produce(state, (draft) => {
+        const todo = draft.todos.find((todo) => todo.id === id);
+        todo.done = !todo.done;
+      }),
+    [REMOVE]: (state, { payload: id }) =>
+      produce(state, (draft) => {
+        const index = draft.todos.findIndex((todo) => todo.id === id);
+        draft.todos.splice(index, 1);
+      }),
+  },
+  initialState
+);
+###
+
+17.7 Hooks를 사용하여 컨테이너 컴포넌트 만들기
+
+리덕스 스토어와 연동된 컨테이너 컴포넌트를 만들 때 connect 함수를
+사용하는 대신 react-redux 에서 제공하는 Hooks를 사용해보자.
+
+(1) useSelector 로 상태 조회하기
+
+const 결과 = useSelector(상태 선택 함수)
+
+상태선택함수는 mapStateToProps와 형태가 같다.
+CounterContainer에서 connect 함수 대신 useSelector를 사용하여 
+counter.number 값을 조회함으로써 Counter에게 props를 넘겨주자.
+
+(2) useDispatch 를 사용하여 액션 디스패치하기
+
+useDispatch는 컴포넌트 내부에서 스토어의 내장함수 dispatch를 
+사용할 수 있게 해준다.
+컨테이너 컴포넌트에서 액션을 디스패치해야한다면 이 Hooks을 사용하라.
+
+### 
+위의 두가지를 다 추가한 예제
+/containers/CCuseSelector.js 
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
+import Counter from "../components/Counter";
+import { increase, decrease } from "../modules/counter";
+
+const CCuseSelector = () => {
+  const number = useSelector((state) => state.counter.number);
+  const dispatch = useDispatch();
+  return (
+    <Counter
+      number={number}
+      onIncrease={() => dispatch(increase())}
+      onDecrease={() => dispatch(decrease())}
+    />
+  );
+};
+
+export default CCuseSelector;
+
+위대로 useCallback 을 사용하지 않고 만들경우
+컴포넌트가 리렌더링 될때마다, onIncrease함수와 onDecrease 함수가
+새로 만들어져서 적용됨.
+
+컴포넌트 성능을 최적화 해야 하는 경우 
+useCallback으로 액션을 디스패치하는 함수를 감싸주는게 좋다
+
+
+예시
+###
+ # CCuseSelector.js
+const CCuseSelector = () => {
+  const number = useSelector((state) => state.counter.number);
+  const dispatch = useDispatch();
+  const onIncrease = useCallback(() => dispatch(increase()), [dispatch]);
+  const onDecrease = useCallback(() => dispatch(decrease()), [dispatch]);
+
+  return (
+    <Counter number={number} onIncrease={onIncrease} onDecrease={onDecrease} />
+  );
+};
+
+
+
+
+###
+
+(3) useStore를 사용하여 리덕스 스토어 사용하기
+
+useStore Hooks 를 사용하면 컴포넌트 내부에서 리덕스 스토어 객체를
+직접 사용할 수 있다.
+
+const store = useStore();
+store.dispatch({ type : 'SAMPLE_ACTION'});
+store.getState();
+=> 컴포넌트에서 어쩌다가 스토어에 직접 접근해야 하는 상황에만 사용함
+( 잘 안 씀 )
+
+
+(4) useActions 유틸 Hook을 만들어 사용하기.
+
+원래 react-redux에 내장된 상태로 릴리즈 될 계획이었으나,
+리덕스 개발팀에서 꼭 필요하지 않다고 판단하여 제외된 Hooks,
+대신, 공식 문서에서 그대로 복사하여 사용할 수 있도록 제공중
+- http://react-redux.js.org/next/api/hooks#recipe-useactions
+
+=> 이 Hooks를 사용하면, 여러 개의 액션을 사용해야 하는 경우
+코드를 훨씬 깔끔하게 정리하여 작성할 수 있다.
+
+###
+ lib/useActions.js
+###
+
+useActions Hook은 액션 생성 함수를 액션을 디스패치하는 함수로 변환
+액션 생성 함수를 사용하여 액션 객체를 만들고,
+이를 스토어에 디스패치하는 작업을 해 주는 함수를 자동으로 만들어 줌
+
+useActions는 두 가지 파라미터가 존재,
+첫 번째 파라미터는 액션 생성 함수로 이루어진 배열,
+두 번재 파라미터는 deps 배열, 
+이 배열 안에 들어 있는 원소가 바뀌면 액션을 디스패치하는 함수를 새로 만듬 
+
+TodoContainer에서 useActions사용
+
+### 
+containers/TodosHooksContainer.js
+###
+
+
+
+(5) connect 함수와의 주요 차이점
+
+컨테이너 컴포넌트 생성시 , connect 함수를 사용해도 되고,
+useSelector와 useDispatch를 사용해도 좋다.
+리덕스 관련 Hook이 있다고 해서 기존 connect 함수가 사라지는 것은 아니다.
+(편한거 사용)
+
+BUT , Hooks를 사용하여 컨테이너 컴포넌트를 만들 때 잘 알아둬야 할것
+
+- connect의 경우
+connect 함수를 사용하여 컨테이너 컴포넌트를 만들었을 경우,
+해당 컨테이너 컴포넌트의 부모 컴포넌트가 리렌더링될 때 
+해당 컨테이너 컴포넌트의 props가 바뀌지 않았다면, 리렌더링이 자동으로
+방지되어 성능이 최적화 된다.
+
+- useSelector의 경우
+BUT, useSelector를 사용하여 리덕스 상태를 조회했을 때는,
+이 최적화 작업이 자동으로 이루어지지 않으므로, 성능 최적화를 위해서
+React.memo를 컨테이너 컴포넌트에 사용해 줘야한다.
+
+# /containers/TodosHooksContainer React.memo사용;
+export default React.memo(TodosHooksContainer);
+##
+- but, 여기서는 부모 컨포넌트인 App.js 는 변하지 않으므로 굳이 사용X
+
+
+-정리
+리액트 프로젝트에서 리덕스를 사용하면 업데이트에 관련된 로직을 리액트
+컴포넌트에서 완벽하게 분리시킬 수 있으므로, 유지 보수성이 높은 코드를 
+작성해 낼 수 있다.
+규모가 큰 프로젝트에 리덕스를 적용하면 상태를 더 체계적으로 관리할
+수 있다.
